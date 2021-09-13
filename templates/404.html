@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='tf_apps.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Server error</title>
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <div class="header shadow">
+            <a href="/"><img class="logo" src="{{ url_for('static', filename='logo.png') }}"></a>
+            <div>
+                <div class="main_title">MCD Vaults Tracker</div>
+            </div>
+        </div>
+
+        <div class="header shadow" style="display: flex; justify-content: space-between;">
+
+            <div class="error" style="display: inline-flex; align-items: center; margin-left: auto; margin-right: auto;">
+
+                <div style="display: block;">
+
+                    <div>
+                        <span style="font-size: 65px; color: white; text-shadow: 5px 5px #eeeeee; -webkit-text-stroke: 1px #cccccc;">#NOT FOUND</span></span>
+                    </div>
+                    <div>
+                        <span style="font-size: 200px; color: white; text-shadow: 5px 5px #eeeeee; -webkit-text-stroke: 1px #cccccc;"><b>404</b></span>
+                    </div>
+                    
+                    <div style="display: flex;">
+                        
+                        <div style="font-size: 100px; color: #1aab9b; display: inline-flex; align-items: center;">
+
+                            <i class="fa fa-frown-o"></i>
+
+                        </div>
+
+                        <div style="display: inline-flex; align-items: flex-start;">
+
+                            <div style="display: block; margin-left: 30px;">
+                                <div>
+                                    <h3 style="font-size: 30px;">
+                                        We can't find what you're looking for...
+                                    </h3>
+                                </div>
+                                <div>
+                                    <form>
+                                        <input style="background: linear-gradient(to bottom, #fff 0%, #dcdcdc 100%); border: 1px solid #aaaaaa; padding: 5px 15px;" type="button" value="Go back" onclick="history.back()">
+                                    </form>
+                                </div>
+                            </div>
+    
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+        <div class="footer shadow">
+            {% include 'footer.html' %}
+        </div>
+
+    </div>
+
+    
+</body>
+</html>

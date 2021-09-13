@@ -1,0 +1,479 @@
+/*
+ * Copyright 2021 DAI Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+body {
+    font-family: sans-serif;
+    margin: 5px;
+    color: #444444;
+}
+
+a:link, a:visited {
+  color: #555555;
+}
+
+h3 a:link, h3 a:visited {
+  color: #1aab9b;
+}
+
+a:hover {
+  color: #1aab9b;
+}
+
+a.area_link {
+    text-decoration: none;
+}
+
+a.area_link:hover {
+    text-decoration: none;
+    color: #555555;
+}
+
+h1, h2 {
+    color: #1aab9b;
+}
+
+h2 {
+    margin-bottom: 5px;
+}
+
+h3 {
+    color: #1aab9b;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+span.left_field {
+    width: 200px;
+    display: inline-block;
+}
+
+span.expose {
+    font-weight: normal;
+    color: #1aab9b;
+}
+
+span.expose a {
+    color: #1aab9b;
+}
+
+.kpi {
+    font-size: 20px;
+    font-family: sans-serif;
+    contain: content;
+    display: flex;
+    justify-content: space-between;
+}
+
+.kpi .expose {
+    font-size: 28px;
+}
+
+.kpi_label {
+    font-size: 13px;
+    height: 15px;
+}
+
+.part_line {
+    height: 4px;
+    background-color: #1aab9b;
+    position: absolute;
+    display: block;
+    left: 0;
+    bottom: 0;
+}
+
+.state {
+    font-size: 15px !important;
+    position: absolute;
+    margin-bottom: 10px;
+    margin-right: 15px;
+    color: #1aab9b;
+}
+
+.shadow {
+    border: 1px #cccccc solid;
+    padding: 10px;
+    margin: 5px;
+    box-shadow: 5px 5px #eeeeee;
+    background-color: #fcfcfc;
+    position: relative;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-rows: 130px calc(100vh - 185px) 45px;
+    max-height: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.left-box, .right-box, .center-box {
+    display: block;
+    overflow: auto;
+    padding-bottom: 20px;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 180px auto;
+    align-content: start;
+}
+
+.split-contents {
+    display: grid;
+    grid-template-columns: 38% 62%;
+}
+
+.contents {
+    display: grid;
+}
+
+.left_panel, .right_panel {
+    display: grid;
+    font-family: monospace;
+    overflow-y: auto;
+    align-content: start;
+}
+
+.footer {
+    display: grid;
+    font-family: monospace;
+    font-size: 10px;
+    text-align: center;
+}
+
+.right-top {
+    font-size: 10px;
+    text-align: right;
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 5px;
+}
+
+.right-bottom {
+    font-size: 10px;
+    text-align: right;
+    color: #555555;
+    /* position: absolute; */
+    right: 0;
+    bottom: 0;
+    /* padding: 5px 10px 10px 5px; */
+}
+
+.history {
+    position: absolute;
+    right: 173px;
+    bottom: 0;
+}
+
+.logo {
+    height: 100px;
+}
+
+.main_title {
+    font-size: 40px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.refresh {
+    font-size: 13px;
+    margin-left: 2px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    font-family: monospace;
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover, .close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.simple-table td, th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: #aaaaaa 1px solid;
+    text-align: center;
+    padding: 5px;
+    font-size: 12px;
+}
+
+.simple-table th {
+    background-color: #dddddd;
+}
+
+.simple-table {
+    table-layout: fixed;
+    width: 100%;
+    white-space: nowrap;
+    border-collapse: collapse;
+}
+
+.history-table td {
+    text-align: left;
+}
+
+.simple-table tr:nth-child(odd) td{
+    background-color: #f0f0f0;
+}
+
+input {
+    border-radius: 0;
+    border: solid 1px #aaa;
+}
+
+.dt-buttons {
+    padding: 0 0 10px;
+    float: left;
+}
+
+#sorted-table_length {
+    padding-right: 10px;
+}
+
+.buttons-csv {
+    background: linear-gradient(to bottom, #fff 0%, #dcdcdc 100%);
+    border: 1px solid #aaaaaa;
+    padding: 5px 15px;
+}
+
+.buttons-html5 {
+    cursor: pointer;
+}
+
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #1aab9b;
+    width: 60px;
+    height: 60px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.inner_left {
+    display: inline-block;
+}
+
+.inner_right {
+    display: inline-flex;
+    align-items: flex-end;
+}
+
+.token_flow_branding {
+    padding-right: 20px;
+    padding-top: 20px;
+    text-align: end;
+}
+
+.simple-button {
+    border: 0;
+    color: #333;
+    background-color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 0;
+}
+
+#sorted-table_filter input {
+    border-radius: 0;
+}
+
+#search {
+    padding: 5px;
+    background-color: transparent;
+}
+
+.error {
+    font-family: sans-serif;
+    font-family: monospace;
+}
+
+#sorted-table_length select {
+    border-radius: 0px;
+}
+
+#sorted-table_paginate span a {
+    border-radius: 0px;
+}
+
+.modebar-container {
+    display: none;
+}
+
+.dataTables_wrapper {
+    min-width: 880px;
+}
+
+.js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+    margin: 0 auto;
+}
+
+.title-form-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+@media screen and (max-width: 1024px) {
+    .dashboard {
+        max-width: 768px;
+        grid-template-rows: auto auto 45px;
+    }
+
+    .main_title {
+        font-size: 36px;
+    }
+
+    .split-contents {
+        grid-template-columns: 100%;
+    } 
+    
+    .header {
+        grid-template-columns: 130px auto ;
+    }
+
+    .logo-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .logo {
+        width: 100%;
+        height: auto;
+    }
+}
+
+.powered-by {
+    text-align: right;
+    margin-bottom: 8px;
+}
+
+.form-container, .title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+@media screen and (max-width: 768px) {
+    .dashboard {
+        grid-template-rows: auto auto auto;
+        max-width: 414px;
+    }
+
+    .header {
+        grid-template-columns: 100%;
+    }
+
+    .logo-container {
+        max-width: 40px;
+        margin-bottom: 15px;
+    }
+
+    .main_title {
+        font-size: 24px;
+    }
+
+    .refresh {
+        font-size: 11px;
+    }
+
+    #search {
+        width: 120px;
+    }
+
+    .title-form-container {
+        flex-direction: column;
+    }
+
+    .form-container {
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .kpi .expose {
+        font-size: 22px;
+    }
+
+    .kpi .inner-left {
+        font-size: 18px;
+    }
+
+    .kpi_label {
+        height: auto;
+        margin-bottom: 2px;
+    }
+
+    .kpi.shadow {
+        flex-direction: column;
+    }
+
+    .kpi.shadow .right-bottom {
+        text-align: left;
+        margin-top: 10px;
+    }
+
+    #sorted-table_length, #sorted-table_filter {
+        text-align: left;
+        float: left;
+    }
+
+    .dt-buttons {
+        float: none;
+    }
+}

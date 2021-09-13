@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="MCD@sxa92001.us-east-1.snowflakecomputing.com" uuid="0c42509f-2a1b-4e58-ae03-6025b0f943e3">
+      <driver-ref>snowflake</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>net.snowflake.client.jdbc.SnowflakeDriver</jdbc-driver>
+      <jdbc-url>jdbc:snowflake://sxa92001.us-east-1.snowflakecomputing.com:443?warehouse=COMPUTE_WH&amp;db=MCD&amp;schema=PUBLIC</jdbc-url>
+    </data-source>
+  </component>
+</project>

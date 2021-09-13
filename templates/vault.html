@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.4/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.4/js/buttons.html5.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='tf_apps.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dataTables.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>MCD Vaults Tracker</title>
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <div class="header shadow">
+            {% include 'header.html' %}
+        </div>
+
+        <div class="split-contents">
+
+            <div class="left_panel shadow">
+
+                 <div class="kpi shadow">
+                    <div class="inner_left">
+                        <div class="kpi_label">Maker vault:</div>
+                        <span class="expose">{{ vault_id }}</span> ({{ collateral }})<br>
+                    </div>
+                    <div class="inner_right">
+                        <div class="right-bottom" style="font-size: 12px;">
+                            {% if owner %}
+                                Owner: <a style="color: #1aab9b" href="/owner/{{ owner }}"><b>{{ owner | truncate(20, True) }}</b></a><br>
+                            {% endif %}
+                            Created in block: <b>{{ block_created }}</b><br>
+                            <b>{{ time_created }}</b> UTC
+                        </div>
+                    </div>
+                </div>
+
+                <div id="data_html">
+                    <div>
+                        <div class="loader" style="margin-top: 40%; margin-left: auto; margin-right: auto;"></div>
+                    </div>
+                </div>
+
+                <div id="graph-box" class="left-box" style="visibility: hidden;">
+                    <div class="chart" id="graph1">
+                        <script nonce="{{ csp_nonce() }}">
+                            let graph1 = {{plot | safe}};
+                            Plotly.plot('graph1', graph1, {displayLogo: false});
+                        </script>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="right_panel shadow">
+                <div id="table_container" style="visibility: hidden;">
+                    <div><h3 style="margin-top: 2px; ">{{ vault_id }} operations history <span id='operations_num'></span>:</h3></div>
+                    <div class="right-box">
+                        <table id="sorted-table" class="display nowrap" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Time (UTC)</th>
+                                    <th>Operations</th>
+                                    <th>Collateral<br>change<br>({{ collateral[:-2] }})</th>
+                                    <th>Debt<br>change<br>(DAI)</th>
+                                    <th>Paid<br>fees<br>(DAI)</th>
+                                    <th>Market<br>price<br>(USD)</th>
+                                    <th>Oracle<br>price<br>(USD)</th>
+                                    <th>Pre<br>coll.</th>
+                                    <th>Post<br>coll.</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div id='cover' class="loader" style="margin-top: 20%; margin-left: auto; margin-right: auto;"></div>
+            </div>
+
+        </div>
+
+        <div class="footer shadow">
+            {% include 'footer.html' %}
+        </div>
+
+    </div>
+    <script nonce="{{ csp_nonce() }}">
+
+        $(document).ready(function() {
+
+            const url = window.location.href;
+            const u = new URL(url);
+            const vault = (u.pathname.substring(u.pathname.lastIndexOf('/') + 1));
+
+            $.ajax({
+                url: "/data/vault/" + vault,
+                method: 'get',
+                dataType: 'json',
+                contentType: 'application/json',
+                success: function (msg) {
+
+                    if (msg.status === "success") {
+
+                        const data = msg.data;
+
+                        $('#sorted-table').DataTable( {
+                            data: data['operations'],
+                            autoWidth: false,
+                            columns: [
+                                { data: "TIME", width: '120px' },
+                                { data: "OPERATION" },
+                                { data: "COLLATERAL_CHANGE", width: '80px' },
+                                { data: "DEBT_CHANGE", width: '80px' },
+                                { data: "PAID_FEES", width: '65px' },
+                                { data: "MARKET_PRICE", width: '50px' },
+                                { data: "ORACLE_PRICE", width: '50px' },
+                                { data: "PRE_COLL", width: '40px' },
+                                { data: "POST_COLL", width: '40px' },
+                            ],
+                            columnDefs: [
+                                {
+                                targets: 0,
+                                render: function( data ) {
+                                    const x = data;
+                                    return '<span>' + x.substring(0, 19) + '</span><span style=\'display: none;\'>' + x.substring(19, x.length) + '</span>';
+                                    }
+                                }
+                            ],
+                            order: [[ 0, "desc" ]],
+                            lengthMenu: [ [20, 50, 100, -1], [20, 50, 100, "All"] ],
+                            pageLength: 20,
+                            dom: 'lBfrtip',
+                            buttons: [ {
+                                extend: 'csv',
+                                text: 'Export to CSV',
+                                filename: vault + ' operations',
+                                exportOptions: {
+                                    modifier: {
+                                        search: 'none'
+                                    }
+                                }
+                            }],
+                            initComplete: function() {
+                              if (this.api().page.info().pages <= 1) {
+                                $('#sorted-table_length').hide();
+                                $('#sorted-table_paginate').hide();
+                                $('#sorted-table_info').hide();
+                              }
+                              if (this.api().page.info().pages === 0) {
+                                $('#sorted-table_filter').hide();
+                              }
+                            }
+                        });
+
+                        $( "#sorted-table" ).removeClass();
+                        $( "#sorted-table" ).addClass("simple-table");
+                        $( "#sorted-table" ).addClass("dataTable");
+                        $( "#sorted-table" ).addClass("no-footer");
+                        $( "#cover" ).css("display", "none");
+                        $( "#table_container" ).css("visibility", "visible");
+
+                        const plot = JSON.parse(data.plot);
+                        Plotly.newPlot('graph1', plot.data, plot.layout);
+
+                        $( "#data_html" ).html(`
+
+                            <div class="kpi shadow">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Locked collateral:</div>
+                                    <span class="expose">` + data['locked_collateral'] + `</span> ` + data['coin'] + `<br>
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        ` + data['coin'] + ` oracle price: <b>` + data['osm_price'] + `</b> USD<br>
+                                        ` + data['coin'] + ` next oracle price: <b>` + data['next_osm_price'] + `</b> USD<br>
+                                        ` + data['coin'] + ` market price: <b>` + data['mkt_price'] + `</b> USD<br>
+                                        Collateral value: <b>` + data['collateral_value'] + `</b> USD<br>
+                                    </div>
+                                </div>
+                                <div class="part_line" style="width: ` + data['collateral_ratio'] + `%"></div>
+                            </div>
+                            <div class="kpi shadow">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Current debt:</div>
+                                    <span class="expose">` + data['debt'] + `</span> DAI<br>
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        Principal: <b>` + data['principal'] + `</b> DAI<br>
+                                        Accrued fees: <b>` + data['fees'] + `</b> DAI<br>
+                                        Already paid: <b>` + data['paid_fees'] + `</b> DAI<br>
+                                    </div>
+                                </div>
+                                <div class="part_line" style="width: ` + data['debt_ratio'] + `%"></div>
+                            </div>
+
+                            <div class="kpi shadow" id="coll_kpi">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Collateralization:</div>
+                                    <span class="expose">` + data['collateralization'] + `</span> (min. ` + data['liquidation_ratio'] + `)<br>
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        Liquidation price: <b>` + data['liquidation_price'] + `</b> USD<br>
+                                        Available debt: <b>` + data['available_debt'] + `</b> DAI<br>
+                                        Available coll.: <b>` + data['available_collateral'] + `</b> ` + data['coin'] + `<br>
+                                    </div>
+                                </div>
+                                <div class="part_line" style="width: ` + data['coll_ratio'] + `%"></div>
+                            </div>
+
+                        `)
+
+                        $( "#data_html" ).css("display", "contents");
+                        $( "#graph-box" ).css("visibility", "visible");
+                        $( "#operations_num" ).text("(" + data['operations_num'] + ")");
+
+                        if (data['collateralization'] === '-') {
+                            $('#coll_kpi').hide();
+                        }
+
+                    } else {
+                        const error_message = `
+                        <div style="padding: 10px; margin-bottom: 50px">
+                            <h2>There was a problem while fetching data :(<br>
+                            Please try again</h2>
+                        </div>`;
+                        $( "#data_html" ).html(error_message);
+                        $( "#cover" ).removeClass();
+                        $( "#cover" ).html(error_message);
+                    }
+
+                },
+                error: function (ex) {
+                    const error_message = `
+                    <div style="padding-left: 50px; margin-top: 50px; margin-bottom: 50px">
+                        <h2>Something went wrong :(<br>
+                        Try again later</h2>
+                    </div>`;
+                    $( "#dashboard" ).html(error_message);
+                }
+            });
+
+        });
+
+    </script>
+</body>
+</html>

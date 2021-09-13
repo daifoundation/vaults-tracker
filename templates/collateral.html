@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.4/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.4/js/buttons.html5.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='tf_apps.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dataTables.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>MCD Vaults Tracker</title>
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <div class="header shadow">
+            {% include 'header.html' %}
+        </div>
+
+        <div class="split-contents">
+            <div class="left_panel shadow">
+
+                <div class="kpi shadow">
+                    <div class="inner_left">
+                        <div class="kpi_label">Collateral:</div>
+                        <span class="expose">{{ collateral_id }}</span><br>
+                    </div>
+                    <div class="inner_right">              
+                        <div class="right-bottom" style="font-size: 12px;">
+                            Initiated in block: <b>{{ created_block }}</b> <br>
+                            <b>{{ created_time }}</b> UTC <br>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="data_html">
+                    <div>
+                        <div class="loader" style="margin-top: 40%; margin-left: auto; margin-right: auto;"></div>
+                    </div>
+                </div>
+
+                <div id="graph-box" class="left-box" style="visibility: hidden;">
+                    <div class="chart" id="graph1">
+                        <script nonce="{{ csp_nonce() }}">
+                            let graph1 = {{plot | safe}};
+                            Plotly.plot('graph1', graph1, {});
+                        </script>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="right_panel shadow">
+                <div id="table_container" style="visibility: hidden;">
+                    <div><h3 style="margin-top: 2px; ">{{ collateral_id }} vaults list <span id='list_num'></span>:</h3></div>
+                    <div class="right-box">
+                        <table id="sorted-table" class="display nowrap" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Vault</th>
+                                    <th>Owner</th>
+                                    <th>Locked<br>amount</th>
+                                    <th>Total<br>debt (DAI)</th>
+                                    <th>Coll.<br>%</th>
+                                    <th>Liq.<br>price</th>
+                                    <th>Available<br>debt (DAI)</th>
+                                    <th>Available<br>coll.</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div id='cover' class="loader" style="margin-top: 20%; margin-left: auto; margin-right: auto;"></div>
+            </div>
+
+        </div>
+
+        <div class="footer shadow">
+            {% include 'footer.html' %}
+        </div>
+
+    </div>
+
+    <script nonce="{{ csp_nonce() }}">
+
+        $(document).ready(function() {
+
+            const url = window.location.href;
+            const u = new URL(url);
+            const collateral = (u.pathname.substring(u.pathname.lastIndexOf('/') + 1));
+
+            $.ajax({
+                url: "/data/collateral/" + collateral,
+                method: 'get',
+                dataType: 'json',
+                contentType: 'application/json',
+                success: function (msg) {
+
+                    if (msg.status === "success") {
+
+                        const data = msg.data;
+
+                        $('#sorted-table').DataTable({
+                            data: data['vaults'],
+                            autoWidth: false,
+                            columns: [
+                                { data: "VAULT", width: '60px' },
+                                { data: "OWNER" },
+                                { data: "COLLATERAL", width: '80px' },
+                                { data: "DEBT", width: '85px' },
+                                { data: "COLLATERALIZATION", width: '50px' },
+                                { data: "LIQUIDATION_PRICE", width: '60px' },
+                                { data: "AVAILABLE_DEBT", width: '85px' },
+                                { data: "AVAILABLE_COLLATERAL", width: '80px' },
+                            ],
+                            order: [[3, "desc"]],
+                            lengthMenu: [[20, 50, 100, -1], [20, 50, 100, "All"]],
+                            pageLength: 20,
+                            dom: 'lBfrtip',
+                            buttons: [{
+                                extend: 'csv',
+                                text: 'Export to CSV',
+                                filename: '{{ collateral_id }} vaults',
+                                exportOptions: {
+                                    modifier: {
+                                        search: 'none'
+                                    }
+                                }
+                            }],
+                            language: {
+                              "emptyTable": "No active vaults found..."
+                            },
+                            initComplete: function() {
+                              if (this.api().page.info().pages <= 1) {
+                                $('#sorted-table_length').hide();
+                                $('#sorted-table_paginate').hide();
+                                $('#sorted-table_info').hide();
+                              }
+                              if (this.api().page.info().pages === 0) {
+                                $('#sorted-table_filter').hide();
+                              }
+                            }
+                        });
+
+                        $("#sorted-table").removeClass();
+                        $("#sorted-table").addClass("simple-table");
+                        $("#sorted-table").addClass("dataTable");
+                        $("#sorted-table").addClass("no-footer");
+                        $("#cover").css("display", "none");
+                        $("#table_container").css("visibility", "visible");
+
+                        const plot = JSON.parse(data.plot);
+                        Plotly.newPlot('graph1', plot.data, plot.layout);
+
+                        $("#data_html").html(`
+                            <div class="kpi shadow">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Number of active vaults:</div>
+                                    <span class="expose">` + data['active_num'] + `</span>  (total: <span>` + data['vaults_num'] + `</span>)
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        Locked amount: <b><span>` + data['locked_amount'] + `</span></b> <span>` + data['token'] + `</span> <br>
+                                        Locked value: <b><span id="locked_value">` + data['locked_value'] + `</span></b> USD <br>
+                                        ` + data['token'] + ` market price: <b><span>` + data['market_price'] + `</span></b> USD <br>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="kpi shadow">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Total debt:</div>
+                                    <span class="expose"><span id="total_debt">` + data['total_debt'] + `</span></span> DAI
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        Debt ceiling: <b><span id="debt_ceiling"> ` + data['debt_ceiling'] + ` </span></b> DAI<br>
+                                        Debt ceiling utilization: <b><span id="debt_utilization">` + data['debt_utilization'] + `</span></b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="kpi shadow" id="coll_kpi">
+                                <div class="inner_left">
+                                    <div class="kpi_label">Collateralization:</div>
+                                    <span class="expose"><span id="collateralization">` + data['collateralization'] + `</span></span> (min. <span id="liquidation_ratio">`
+                                        + data['liquidation_ratio'] + `</span>)<br>
+                                </div>
+                                <div class="inner_right">
+                                    <div class="right-bottom" style="font-size: 12px;">
+                                        Available debt: <b><span id="available_debt">` + data['available_debt'] + `</span></b> DAI<br>
+                                        Available collateral: <b><span id="available_collateral">` + data['available_collateral'] + `</span></b> <span id="token">` + data.token + `</span><br>
+                                        ` + data['token'] + ` current oracle price: <b><span>` + data['current_osm_price'] + `</span></b> USD <br>
+                                        ` + data['token'] + ` next oracle price: <b><span>` + data['next_osm_price'] + `</span></b> USD <br>
+                                    </div>
+                                </div>
+                                <div class="part_line" style="width: {{ coll_ratio }}%"></div>
+                            </div>
+                        `)
+
+                        $("#data_html").css("display", "contents");
+                        $("#graph-box").css("visibility", "visible");
+                        $("#list_num").text("(" + data['active_num'] + ")");
+
+                        if (data['collateralization'] === '-') {
+                            $('#coll_kpi').hide();
+                            $('#graph1').hide();
+                        }
+
+                    } else {
+                        const error_message = `
+                        <div style="padding: 10px; margin-bottom: 50px">
+                            <h2>There was a problem while fetching data :(<br>
+                            Please try again.</h2>
+                        </div>`;
+                        $( "#data_html" ).html(error_message);
+                        $( "#table_container" ).html(error_message);
+                    }
+
+                },
+                error: function (ex) {
+                    const error_message = `
+                    <div style="padding-left: 50px; margin-top: 50px; margin-bottom: 50px">
+                        <h2>Something went wrong :(<br>
+                        Try again later</h2>
+                    </div>`;
+                    $( "#dashboard" ).html(error_message);
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
